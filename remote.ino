@@ -28,19 +28,19 @@ void setup() {
   Serial.begin(115200);
 
   radio.begin();
-  
+
   radio.setAutoAck(false);
 
-  radio.setDataRate(RF24_250KBPS); 
+  radio.setDataRate(RF24_250KBPS);
   //(RF24_250KBPS|RF24_1MBPS|RF24_2MBPS)
   //Greater level = more consumption = longer distance
-  
+
   radio.setPALevel(RF24_PA_MAX);
-  
+
   radio.setPayloadSize(sizeof(currentData));
 
   radio.openWritingPipe(address);
-  
+
   radio.stopListening();
 }
 
@@ -63,7 +63,7 @@ void loop() {
   X = map(X, 0, 1023, 0, 255);
   Y = map(Y, 0, 1023, 0, 255);
 
-  if ((tempX != X || tempY != Y) && (abs((X - tempX)) >= 5 || abs((Y - tempY)) >= 5) {
+  if (tempX != X || tempY != Y) {
     tempX = X;
     tempY = Y;
 
@@ -77,7 +77,11 @@ void loop() {
     currentData.coordY = Y;
     currentData.isButtonPressed = !SW;
 
-    radio.write(&currentData, sizeof(currentData));
+    bool report = radio.write(&currentData, sizeof(currentData));
+
+    if (report) {
+      Serial.println("OK");
+    }
 
     delay(100);
   }
