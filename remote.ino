@@ -46,6 +46,9 @@ void setup() {
 
 int tempX;
 int tempY;
+bool tempSw = false;
+bool buttonState = false;
+bool tempButtonState;
 
 void loop() {
   int X = analogRead(joyX);
@@ -58,14 +61,24 @@ void loop() {
   Y = analogRead(joyY);
   Y = analogRead(joyY);
 
-  bool SW = digitalRead(joySw);
+  bool Sw = digitalRead(joySw);
 
   X = map(X, 0, 1023, 0, 255);
   Y = map(Y, 0, 1023, 0, 255);
 
-  if (tempX != X || tempY != Y) {
+  if (Sw == 1 && tempSw == 0) {
+    buttonState = !buttonState;
+    tempSw = 1;
+  }
+
+  if (Sw == 0 && tempSw == 1) {
+    tempSw = 0;
+  }
+
+  if ((tempX != X || tempY != Y) || buttonState != tempButtonState) {
     tempX = X;
     tempY = Y;
+    tempButtonState = buttonState;
 
     Serial.print(X);
     Serial.print("\t");
@@ -75,7 +88,7 @@ void loop() {
 
     currentData.coordX = X;
     currentData.coordY = Y;
-    currentData.isButtonPressed = !SW;
+    currentData.isButtonPressed = buttonState;
 
     bool report = radio.write(&currentData, sizeof(currentData));
 
@@ -83,6 +96,6 @@ void loop() {
       Serial.println("OK");
     }
 
-    delay(100);
+    delay(20);
   }
 }
