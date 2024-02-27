@@ -33,6 +33,8 @@ struct Data {
   bool isButtonPressed = false;
 };
 
+unsigned long timer = millis();
+
 Data currentData;
 
 void setup() {
@@ -47,18 +49,8 @@ void setup() {
   pinMode(A0, INPUT_PULLUP);
   pinMode(A2, OUTPUT);
   Serial.begin(115200);
-  radio.begin();
-  //Append ACK packet from the receiving radio back to the transmitting radio
-  radio.setAutoAck(true); //(true|false)
-  //Set the transmission datarate
-  radio.setDataRate(RF24_250KBPS); //(RF24_250KBPS|RF24_1MBPS|RF24_2MBPS)
-  //Greater level = more consumption = longer distance
-  radio.setPALevel(RF24_PA_MIN); //(RF24_PA_MIN|RF24_PA_LOW|RF24_PA_HIGH|RF24_PA_MAX)
-  //Default value is the maximum 32 bytes1
-  radio.setPayloadSize(sizeof(currentData));
-  //Act as receiver
-  radio.openReadingPipe(0, address);
-  radio.startListening();
+
+  initRadio();
 }
 
 void setMotorSpeed(int motorSelection, int speedValue, int motorDirection) {
@@ -76,10 +68,10 @@ void setMotorSpeed(int motorSelection, int speedValue, int motorDirection) {
     analogWrite(RL_MOTOR_PWM_PIN, speedValue);
 
     /*Serial.print("\tB: ");
-    Serial.print(speedValue);
+      Serial.print(speedValue);
 
-    Serial.print("\tBR: ");
-    Serial.print(motorDirection);*/
+      Serial.print("\tBR: ");
+      Serial.print(motorDirection);*/
   }
 
   // Right motor logic
@@ -91,10 +83,10 @@ void setMotorSpeed(int motorSelection, int speedValue, int motorDirection) {
     analogWrite(RR_MOTOR_PWM_PIN, speedValue);
 
     /*Serial.print("\tJ: ");
-    Serial.println(speedValue);
+      Serial.println(speedValue);
 
-    Serial.print("\tJR: ");
-    Serial.print(motorDirection);*/
+      Serial.print("\tJR: ");
+      Serial.print(motorDirection);*/
   }
 }
 
@@ -174,8 +166,33 @@ void ControlLED(bool isOn) {
   }
 }
 
-void loop() {
+void ResetData() {
+  currentData.coordX = 124;
+  currentData.coordY = 127;
+  currentData.isButtonPressed = false;
+
+  initRadio();
+
+  timer = millis();
+}
+
+void initRadio() {
+  radio.begin();
+  //Append ACK packet from the receiving radio back to the transmitting radio
+  radio.setAutoAck(true); //(true|false)
+  //Set the transmission datarate
+  radio.setDataRate(RF24_250KBPS); //(RF24_250KBPS|RF24_1MBPS|RF24_2MBPS)
+  //Greater level = more consumption = longer distance
+  radio.setPALevel(RF24_PA_MIN); //(RF24_PA_MIN|RF24_PA_LOW|RF24_PA_HIGH|RF24_PA_MAX)
+  //Default value is the maximum 32 bytes1
+  radio.setPayloadSize(sizeof(currentData));
+  //Act as receiver
+  radio.openReadingPipe(0, address);
+  
   radio.startListening();
+}
+
+void loop() {
 
   if (radio.available() > 0) {
     radio.read(&currentData, sizeof(currentData));
@@ -184,6 +201,12 @@ void loop() {
       Serial.print(currentData.coordY);
       Serial.print("\t");
       Serial.println(currentData.isButtonPressed);*/
+
+    timer = millis();
+  }
+
+  if (millis() - timer > 100) {
+    ResetData();
   }
 
   ControlLED(currentData.isButtonPressed);
