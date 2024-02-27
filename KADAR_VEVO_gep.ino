@@ -21,6 +21,8 @@
 #define RL_MOTOR_DIR_PIN 2
 #define RR_MOTOR_DIR_PIN 8
 
+#define ACK_TIMEOUT 500
+
 bool ledState = false;
 
 RF24 radio(A1, 10); // CE, CSN
@@ -99,8 +101,6 @@ void TankTurn(int joystickYValue) {
   /*Serial.print(joystickYValue);
     Serial.println("Tankturn");*/
 
-  const int speedMultiplier = 1;
-
   int normalizedY = currentData.coordY - 127;
   int turnDirection = normalizedY >= 0 ? RIGHT : LEFT;
 
@@ -140,13 +140,15 @@ void ControlLogic(Data currentData) {
     int leftMotorSpeed = motorSpeed;
     int rightMotorSpeed = motorSpeed;
 
+    const float turnSpeedMultiplier = 0.8;
+  
     if (rotationDirection == FORWARD && (currentData.coordY > 123 && currentData.coordY < 131)) {
-      leftMotorSpeed = motorSpeed - turnValue;
-      rightMotorSpeed = motorSpeed + turnValue;
+      leftMotorSpeed = motorSpeed - turnValue * turnSpeedMultiplier;
+      rightMotorSpeed = motorSpeed + turnValue * turnSpeedMultiplier;
     }
     else {
-      leftMotorSpeed = motorSpeed + turnValue;
-      rightMotorSpeed = motorSpeed - turnValue;
+      leftMotorSpeed = motorSpeed + turnValue * turnSpeedMultiplier;
+      rightMotorSpeed = motorSpeed - turnValue * turnSpeedMultiplier;
     }
 
     leftMotorSpeed = constrain(leftMotorSpeed, 0, 255);
@@ -188,7 +190,7 @@ void initRadio() {
   radio.setPayloadSize(sizeof(currentData));
   //Act as receiver
   radio.openReadingPipe(0, address);
-  
+
   radio.startListening();
 }
 
@@ -196,16 +198,16 @@ void loop() {
 
   if (radio.available() > 0) {
     radio.read(&currentData, sizeof(currentData));
-    /*Serial.print(currentData.coordX);
-      Serial.print("\t");
-      Serial.print(currentData.coordY);
-      Serial.print("\t");
-      Serial.println(currentData.isButtonPressed);*/
+    Serial.print(currentData.coordX);
+    Serial.print("\t");
+    Serial.print(currentData.coordY);
+    Serial.print("\t");
+    Serial.println(currentData.isButtonPressed);
 
     timer = millis();
   }
 
-  if (millis() - timer > 100) {
+  if (millis() - timer > ACK_TIMEOUT) {
     ResetData();
   }
 

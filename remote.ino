@@ -44,8 +44,6 @@ void setup() {
   radio.stopListening();
 }
 
-int tempX;
-int tempY;
 bool tempSw = false;
 bool buttonState = false;
 bool tempButtonState;
@@ -75,27 +73,16 @@ void loop() {
     tempSw = 0;
   }
 
-  if ((tempX != X || tempY != Y) || buttonState != tempButtonState) {
-    tempX = X;
-    tempY = Y;
-    tempButtonState = buttonState;
 
-    Serial.print(X);
-    Serial.print("\t");
-    Serial.println(Y);
+  currentData.coordX = X;
+  currentData.coordY = Y;
+  currentData.isButtonPressed = buttonState;
 
-    // Send data
+  bool report = radio.write(&currentData, sizeof(currentData));
 
-    currentData.coordX = X;
-    currentData.coordY = Y;
-    currentData.isButtonPressed = buttonState;
-
-    bool report = radio.write(&currentData, sizeof(currentData));
-
-    if (report) {
-      Serial.println("OK");
-    }
-
-    delay(20);
+  if (report) {
+    Serial.println("OK");
   }
+
+  delay(20);
 }
