@@ -29,7 +29,7 @@ void setup() {
 
   radio.begin();
 
-  radio.setAutoAck(false);
+  radio.setAutoAck(true);
 
   radio.setDataRate(RF24_250KBPS);
   //(RF24_250KBPS|RF24_1MBPS|RF24_2MBPS)

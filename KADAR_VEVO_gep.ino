@@ -28,9 +28,9 @@ RF24 radio(A1, 10); // CE, CSN
 const byte address[6] = "00001";
 
 struct Data {
-  byte coordX;
-  byte coordY;
-  bool isButtonPressed;
+  byte coordX = 124;
+  byte coordY = 127;
+  bool isButtonPressed = false;
 };
 
 Data currentData;
@@ -49,7 +49,7 @@ void setup() {
   Serial.begin(115200);
   radio.begin();
   //Append ACK packet from the receiving radio back to the transmitting radio
-  radio.setAutoAck(false); //(true|false)
+  radio.setAutoAck(true); //(true|false)
   //Set the transmission datarate
   radio.setDataRate(RF24_250KBPS); //(RF24_250KBPS|RF24_1MBPS|RF24_2MBPS)
   //Greater level = more consumption = longer distance
@@ -59,8 +59,6 @@ void setup() {
   //Act as receiver
   radio.openReadingPipe(0, address);
   radio.startListening();
-
-  digitalWrite(A2, 1);
 }
 
 void setMotorSpeed(int motorSelection, int speedValue, int motorDirection) {
